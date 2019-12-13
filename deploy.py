@@ -8,7 +8,14 @@ import requests
 
 load_dotenv()
 
+print("FOG Deploy script: Rafael Souza <rsouza19796@gmail.com>")
+
 def loadDefaultConfig():
+    if (os.getenv("FOG_API_TOKEN") == None) or (os.getenv("FOG_USER_TOKEN") == None):
+        print("No FOG API Tokens provided.")
+        print("Please make sure you have configured your .env file correctly.")
+        exit(1)
+        pass
     config = {
     "baseURL": "http://fog.c3.furg.br",
     "fog-api-token": os.getenv("FOG_API_TOKEN"),
@@ -38,7 +45,7 @@ def main(argv):
     else:
         readConfig()
 
-    print("FOG Deploy script: Rafael Souza <rsouza19796@gmail.com>")
+
     print("Total Machines to Image: " + str(len(argv)))
 
     for x in range(len(argv)):
@@ -64,7 +71,7 @@ def deployFogCurrentImage(taskTypeID, hostID):
     taskURL=config["baseURL"] + "/fog/host/" + hostID + "/task"
     data = json.dumps({
         "taskTypeID": taskTypeID,
-        "shutdown": 'true',
+        "shutdown": 'false',
         "wol": 'true'
     }).encode('utf8')
     r = requests.post(taskURL, data=data, headers=headers)
