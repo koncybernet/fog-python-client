@@ -68,7 +68,12 @@ def isTaskigDone(hostID):
             flag = False
     return flag
 
-def deployFogCurrentImage(taskTypeID, hostID):
+def taskHost(hostID, data):
+    taskURL=config["baseURL"] + "/fog/host/" + hostID + "/task"
+    r = requests.post(taskURL, data=data, headers=headers)
+    return (r.json())
+
+def captureFogCurrentImage(taskTypeID, hostID):
     taskURL=config["baseURL"] + "/fog/host/" + hostID + "/task"
     data = json.dumps({
         "taskTypeID": taskTypeID,
@@ -87,17 +92,10 @@ def getHostMacAddress(hostID):
         list.append(mac)
     return list
 
-def cmd_deploy(args):
-    print("Total Machines to Image: " + str(len(args.hosts)))
-
-    for x in range(len(args.hosts)):
-        print ("Sending request to machine #" + str(x) + ": " + args.hosts[x], end='')
-        deployFogCurrentImage(getFogTaskTypeId("Deploy"), getFogHostID(args.hosts[x]))
-        print(Fore.GREEN + " Done!" + Style.RESET_ALL)
-
+def wait_if_needed(args):
     if args.wait:
         for x in range(len(args.hosts)):
-            print ("Waiting for machine #" + str(x) + ": " + args.hosts[x] + " to image.", end='')
+            print ("Waiting for machine #" + str(x) + ": " + args.hosts[x] + " ", end='')
             while not isTaskigDone(getFogHostID(args.hosts[x])):
                 spinner = spinning_cursor()
                 for _ in range(4):
@@ -105,10 +103,45 @@ def cmd_deploy(args):
                     sys.stdout.flush()
                     sleep(0.3)
                     sys.stdout.write('\b')
-            print(Fore.GREEN + " Done!" + Style.RESET_ALL)
+            sys.stdout.flush()
+            sys.stdout.write('\b')
+            print(Fore.GREEN + "Done!" + Style.RESET_ALL)
+
+def cmd_deploy(args):
+    print("Total Machines to Deploy: " + str(len(args.hosts)))
+
+    taskData = json.dumps({
+        "taskTypeID": getFogTaskTypeId("Deploy"),
+        "shutdown": '',
+        "wol": 'true'
+    }).encode('utf8')
+
+    for x in range(len(args.hosts)):
+        print ("Sending request to machine #" + str(x) + ": " + args.hosts[x], end='')
+        taskHost(getFogHostID(args.hosts[x]), taskData)
+        print(Fore.GREEN + " Done!" + Style.RESET_ALL)
+
+    wait_if_needed()
+
+def cmd_capture(args):
+    print("Total Machines to Capture: " + str(len(args.hosts)))
+
+    taskData = json.dumps({
+        "taskTypeID": getFogTaskTypeId("Capture"),
+        "shutdown": '',
+        "wol": 'true'
+    }).encode('utf8')
+
+    for x in range(len(args.hosts)):
+        print ("Sending request to machine #" + str(x) + ": " + args.hosts[x], end='')
+        taskHost(getFogHostID(args.hosts[x]), taskData)
+        print(Fore.GREEN + " Done!" + Style.RESET_ALL)
+
+    wait_if_needed()
 
 def cmd_getmac(args):
-    print(getHostMacAddress(getFogHostID(args.host)))
+    for mac in (getHostMacAddress(getFogHostID(args.host))):
+        print(mac)
 
 def main():
 
@@ -125,6 +158,11 @@ def main():
     sp_deploy.set_defaults(func=cmd_deploy)
     sp_deploy.add_argument('hosts', nargs='+', help='Host names in the FOG system.')
     sp_deploy.add_argument('--wait', help="Will wait until the task is done. Useful for scripts.", action='store_true')
+
+    sp_capture = sp.add_parser('capture', help='Captures a image from a host.')
+    sp_capture.set_defaults(func=cmd_capture)
+    sp_capture.add_argument('hosts', nargs='+', help='Host names in the FOG system.')
+    sp_capture.add_argument('--wait', help="Will wait until the task is done. Useful for scripts.", action='store_true')
 
     sp_getmac = sp.add_parser('get-mac', help="Returns a list of a host's MAC addresses.")
     sp_getmac.set_defaults(func=cmd_getmac)
