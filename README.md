@@ -18,8 +18,12 @@ The .env file needs to have the FOG server's api and user keys, they can be foun
 
 `FOG_USER_TOKEN="user's api token`
 
-Then you can use the deploy script:
+Then you can use the client:
 
-`python3 deploy.py [HOST1] [HOST2] [HOST3] `
+`python3 fog.py -h`
+
+`python3 fog.py [deploy|capture|get-mac] -h`
+
+`python3 fog.py deploy HOST1 HOST2 ... HOSTn -h`
 
 The `HOST` stands for the hostname associated with the machine in the FOG server.

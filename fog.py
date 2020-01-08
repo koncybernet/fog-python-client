@@ -121,7 +121,7 @@ def cmd_deploy(args):
         taskHost(getFogHostID(args.hosts[x]), taskData)
         print(Fore.GREEN + " Done!" + Style.RESET_ALL)
 
-    wait_if_needed()
+    wait_if_needed(args)
 
 def cmd_capture(args):
     print("Total Machines to Capture: " + str(len(args.hosts)))
@@ -137,7 +137,7 @@ def cmd_capture(args):
         taskHost(getFogHostID(args.hosts[x]), taskData)
         print(Fore.GREEN + " Done!" + Style.RESET_ALL)
 
-    wait_if_needed()
+    wait_if_needed(args)
 
 def cmd_getmac(args):
     for mac in (getHostMacAddress(getFogHostID(args.host))):
